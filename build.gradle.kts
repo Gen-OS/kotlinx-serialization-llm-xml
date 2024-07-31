@@ -4,6 +4,7 @@ plugins {
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.kotlin.serialization)
   application
+  `maven-publish`
 }
 
 group = "dev.genos.kotlinx.serialization.llm"
@@ -102,4 +103,17 @@ tasks.withType<Test> {
 tasks.withType<JavaCompile>().configureEach {
   sourceCompatibility = "1.8"
   targetCompatibility = "1.8"
+}
+
+// Configure publishing
+publishing {
+  publications {
+    create<MavenPublication>("maven") {
+      from(components["kotlin"])
+
+      groupId = project.group.toString()
+      artifactId = project.name
+      version = project.version.toString()
+    }
+  }
 }
