@@ -1,19 +1,13 @@
-
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
-import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.kotlin.serialization)
   application
-  `maven-publish`
-  signing
 }
 
 group = "dev.genos.kotlinx.serialization.llm"
 version = "0.1.0"
-
 
 repositories {
   gradlePluginPortal()
@@ -24,8 +18,6 @@ repositories {
 kotlin {
   explicitApi()
 
-  jvmToolchain(17)
-
   jvm {
     withJava()
     testRuns["test"].executionTask.configure {
@@ -33,11 +25,10 @@ kotlin {
     }
     compilations.all {
       kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "1.8"
       }
     }
   }
-
 
   js(IR) {
     browser()
@@ -92,7 +83,6 @@ kotlin {
   // Configure native targets
   targets.withType<KotlinNativeTarget>().configureEach {
     binaries.all {
-      // Add the memory allocation implementations
       freeCompilerArgs += listOf("-Xallocator=mimalloc")
     }
   }
@@ -102,7 +92,6 @@ application {
   mainClass.set("dev.genos.kotlinx.serialization.llm.xml.demo.ClaudeDemoKt")
 }
 
-// Configure all test tasks
 tasks.withType<Test> {
   testLogging {
     showStandardStreams = true
@@ -110,58 +99,7 @@ tasks.withType<Test> {
   }
 }
 
-java {
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(17))
-  }
-  sourceCompatibility = JavaVersion.VERSION_11
-  targetCompatibility = JavaVersion.VERSION_17
-}
-
 tasks.withType<JavaCompile>().configureEach {
-  options.release.set(11)
-}
-
-publishing {
-  publications {
-    create<MavenPublication>("mavenJava") {
-      from(components["java"])
-      pom {
-        name.set("Kotlin Serialization LLM XML")
-        description.set("XML serialization for Large Language Models in Kotlin")
-        url.set("https://github.com/yourusername/kotlinx-serialization-llm-xml")
-        licenses {
-          license {
-            name.set("The Apache License, Version 2.0")
-            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-          }
-        }
-        developers {
-          developer {
-            id.set("rjwalters")
-            name.set("Robb Walters")
-            email.set("robb@genos.dev")
-          }
-        }
-        scm {
-          connection.set("scm:git:git://github.com/rjwalters/kotlinx-serialization-llm-xml.git")
-          developerConnection.set("scm:git:ssh://github.com/rjwalters/kotlinx-serialization-llm-xml.git")
-          url.set("https://github.com/rjwalters/kotlinx-serialization-llm-xml")
-        }
-      }
-    }
-  }
-  repositories {
-    maven {
-      url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-      credentials {
-        username = project.findProperty("ossrhUsername") as String? ?: System.getenv("OSSRH_USERNAME")
-        password = project.findProperty("ossrhPassword") as String? ?: System.getenv("OSSRH_PASSWORD")
-      }
-    }
-  }
-}
-
-signing {
-  sign(publishing.publications["mavenJava"])
+  sourceCompatibility = "1.8"
+  targetCompatibility = "1.8"
 }
