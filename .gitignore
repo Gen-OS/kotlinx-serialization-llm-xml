@@ -31,3 +31,4 @@ docs/changelog.md
 docs/contributing.md
 *.hprof
 .env
+.jreleaser/config.toml
