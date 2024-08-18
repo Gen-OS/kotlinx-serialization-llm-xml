@@ -23,7 +23,7 @@ plugins {
 
 apply(plugin = "org.jetbrains.dokka")
 
-group = "dev.genos.kotlinx.serialization.llm.xml"
+group = "dev.genos"
 version = "0.1.1"
 
 repositories {
@@ -242,8 +242,8 @@ jreleaser {
   project {
     copyright.set("2024 GenOS")
     name.set("kotlinx-serialization-llm-xml")
-    version.set(project.version.toString())
-    website.set("https://github.com/Gen-OS/kotlinx-serialization-llm-xml")
+    //version.set(project.version.toString())
+    //website.set("https://github.com/Gen-OS/kotlinx-serialization-llm-xml")
     description.set("Kotlin Serialization extension for XML-based interactions with Large Language Models")
     authors.set(listOf("Robb Walters"))
     license.set("Apache-2.0")
