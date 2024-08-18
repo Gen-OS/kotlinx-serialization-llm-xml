@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.gradle.plugins.signing.Sign
 
 buildscript {
   repositories {
@@ -13,12 +13,12 @@ buildscript {
 }
 
 plugins {
+  signing
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.kotlin.serialization)
   id("com.diffplug.spotless") version "6.18.0"
   id("org.jreleaser") version "1.13.1"
   id("maven-publish")
-  signing
   application
 }
 
@@ -304,21 +304,6 @@ publishing {
   println("Finished configuring publication: $name")
 }
 
-signing {
-  val signingKey: String? by project
-  val signingPassword: String? by project
-  useInMemoryPgpKeys(signingKey, signingPassword)
-  setRequired { gradle.taskGraph.hasTask("publish") }
-  sign(publishing.publications)
-}
-
-// Configure signing for all publications
-afterEvaluate {
-  publishing.publications.withType<MavenPublication>().all {
-    signing.sign(this)
-  }
-}
-
 // JReleaser configuration
 jreleaser {
   project {
@@ -366,3 +351,18 @@ spotless {
     ktlint("0.48.2")
   }
 }
+
+tasks.withType<Sign>().configureEach {
+  val signingKeyId: String? = project.findProperty("signing.keyId") as String?
+  val signingKey: String? = project.findProperty("signing.secretKey") as String?
+  val signingPassword: String? = project.findProperty("signing.password") as String?
+  signing.useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
+
+  doFirst {
+    println("Configuring signing for task: ${this.name}")
+    println("Signing Key ID available: ${signingKeyId != null}")
+    println("Signing Key available: ${signingKey != null}")
+    println("Signing Password available: ${signingPassword != null}")
+  }
+}
+
