@@ -45,17 +45,17 @@ object EmailResultsTestData : TestData<EmailsResults> {
     listOf(
       EmailsResults(
         emails =
-          listOf(
-            EmailResult(
-              emailNumber = 1,
-              recipientName = "John Doe",
-              recipientEmail = "john@example.com",
-              suggestedSubject = "Meeting Follow-up",
-              suggestedMessage = "Thank you for your time today...",
-              timeToSend = "2023-06-15 14:30:00",
-              explanation = "Follow up after the project meeting",
-            ),
+        listOf(
+          EmailResult(
+            emailNumber = 1,
+            recipientName = "John Doe",
+            recipientEmail = "john@example.com",
+            suggestedSubject = "Meeting Follow-up",
+            suggestedMessage = "Thank you for your time today...",
+            timeToSend = "2023-06-15 14:30:00",
+            explanation = "Follow up after the project meeting",
           ),
+        ),
       ),
     )
 

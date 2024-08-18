@@ -6,7 +6,6 @@ import dev.genos.kotlinx.serialization.llm.xml.LlmXml
 import dev.genos.kotlinx.serialization.llm.xml.LlmXmlDecoder
 import dev.genos.kotlinx.serialization.llm.xml.LlmXmlEntity
 import dev.genos.kotlinx.serialization.llm.xml.LlmXmlLexer
-import dev.genos.kotlinx.serialization.llm.xml.LlmXmlLexer.Token
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
