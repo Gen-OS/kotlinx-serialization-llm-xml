@@ -192,14 +192,11 @@ jreleaser {
   }
   deploy {
     maven {
-      nexus2 {
-        create("mavenCentral") {
+      mavenCentral {
+        create("sonatype") {
           active.set(org.jreleaser.model.Active.ALWAYS)
-          url.set("https://s01.oss.sonatype.org/service/local")
-          snapshotUrl.set("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-          closeRepository.set(true)
-          releaseRepository.set(true)
-          stagingRepositories.add("build/staging-deploy")
+          url.set("https://central.sonatype.com/api/v1/publisher")
+          stagingRepository("build/staging-deploy")
         }
       }
     }

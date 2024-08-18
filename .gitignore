@@ -31,4 +31,6 @@ docs/changelog.md
 docs/contributing.md
 *.hprof
 .env
+
+# just in case; this file should be at ~/.jreleaser
 .jreleaser/config.toml
