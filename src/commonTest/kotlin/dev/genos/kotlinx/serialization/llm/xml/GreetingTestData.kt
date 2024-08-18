@@ -67,27 +67,27 @@ object GreetingTestData : TestData<Greeting> {
         from = "AI",
         to = "Human",
         messages =
-          listOf(
-            Message(
-              index = 0,
-              content = "Hello, how can I assist you today?",
-            ),
+        listOf(
+          Message(
+            index = 0,
+            content = "Hello, how can I assist you today?",
           ),
+        ),
       ),
       Greeting(
         from = "AI",
         to = "Human",
         messages =
-          listOf(
-            Message(
-              index = 0,
-              content = "Hello, how can I assist you today?",
-            ),
-            Message(
-              index = 1,
-              content = "I'm here to help with any questions you may have.",
-            ),
+        listOf(
+          Message(
+            index = 0,
+            content = "Hello, how can I assist you today?",
           ),
+          Message(
+            index = 1,
+            content = "I'm here to help with any questions you may have.",
+          ),
+        ),
       ),
       Greeting(
         from = "AI",

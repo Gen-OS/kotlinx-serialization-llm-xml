@@ -67,23 +67,23 @@ object RecipeTestData : TestData<Recipe> {
         name = "Chocolate Chip Cookies",
         description = "Delicious homemade chocolate chip cookies",
         ingredients =
-          listOf(
-            Ingredient(
-              name = "All-purpose flour",
-              quantity = "2 1/4",
-              unit = "cups",
-            ),
-            Ingredient(
-              name = "Chocolate chips",
-              quantity = "2",
-              unit = "cups",
-            ),
+        listOf(
+          Ingredient(
+            name = "All-purpose flour",
+            quantity = "2 1/4",
+            unit = "cups",
           ),
+          Ingredient(
+            name = "Chocolate chips",
+            quantity = "2",
+            unit = "cups",
+          ),
+        ),
         instructions =
-          listOf(
-            Step("Preheat oven to 375°F (190°C)"),
-            Step("Mix ingredients and bake for 9-11 minutes"),
-          ),
+        listOf(
+          Step("Preheat oven to 375°F (190°C)"),
+          Step("Mix ingredients and bake for 9-11 minutes"),
+        ),
       ),
     )
 
