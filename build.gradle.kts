@@ -1,8 +1,9 @@
-
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 buildscript {
   repositories {
+    gradlePluginPortal()
+    google()
     mavenCentral()
   }
   dependencies {
@@ -192,6 +193,8 @@ publishing {
     groupId = "dev.genos"
 
     pom {
+      packaging = "jar"
+
       name.set("kotlinx-serialization-llm-xml")
       description.set(
         """
@@ -234,7 +237,18 @@ publishing {
 }
 
 signing {
+  val signingKey: String? by project
+  val signingPassword: String? by project
+  useInMemoryPgpKeys(signingKey, signingPassword)
+  setRequired { gradle.taskGraph.hasTask("publish") }
   sign(publishing.publications)
+}
+
+// Configure signing for all publications
+afterEvaluate {
+  publishing.publications.withType<MavenPublication>().all {
+    signing.sign(this)
+  }
 }
 
 // JReleaser configuration
@@ -282,13 +296,5 @@ spotless {
   kotlinGradle {
     target("*.gradle.kts")
     ktlint("0.48.2")
-  }
-}
-
-tasks.register("printTasks") {
-  doLast {
-    project.tasks.forEach { task ->
-      println(task.name)
-    }
   }
 }
