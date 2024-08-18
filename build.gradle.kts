@@ -17,13 +17,14 @@ plugins {
   id("com.diffplug.spotless") version "6.18.0"
   id("org.jreleaser") version "1.13.1"
   id("maven-publish")
+  signing
   application
 }
 
 apply(plugin = "org.jetbrains.dokka")
 
 group = "dev.genos.kotlinx.serialization.llm.xml"
-version = "0.1.0"
+version = "0.1.1"
 
 repositories {
   gradlePluginPortal()
@@ -232,10 +233,20 @@ publishing {
   println("Finished configuring publication: $name")
 }
 
+signing {
+  sign(publishing.publications)
+}
+
 // JReleaser configuration
 jreleaser {
   project {
     copyright.set("2024 GenOS")
+    name.set("kotlinx-serialization-llm-xml")
+    version.set(project.version.toString())
+    website.set("https://github.com/Gen-OS/kotlinx-serialization-llm-xml")
+    description.set("Kotlin Serialization extension for XML-based interactions with Large Language Models")
+    authors.set(listOf("Robb Walters"))
+    license.set("Apache-2.0")
   }
   release {
     github {
