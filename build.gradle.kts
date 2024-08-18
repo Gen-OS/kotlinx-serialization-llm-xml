@@ -1,3 +1,4 @@
+
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 buildscript {
@@ -65,7 +66,28 @@ kotlin {
   tvosSimulatorArm64()
   mingwX64()
 
+  targets.all {
+    compilations.all {
+      kotlinOptions {
+        freeCompilerArgs = freeCompilerArgs + "-Xexplicit-api=strict"
+      }
+    }
+  }
+
   sourceSets {
+    all {
+      languageSettings.apply {
+        optIn("kotlinx.serialization.ExperimentalSerializationApi")
+      }
+    }
+
+    matching { it.name.endsWith("Test") }.all {
+      languageSettings.apply {
+        optIn("kotlin.RequiresOptIn")
+        progressiveMode = true
+      }
+    }
+
     val commonMain by getting {
       kotlin.srcDir("src/commonMain/kotlin")
       dependencies {
@@ -91,8 +113,17 @@ kotlin {
     }
   }
 
-  sourceSets.all {
-    languageSettings.optIn("kotlinx.serialization.ExperimentalSerializationApi")
+  // Configure all compilations
+  targets.all {
+    compilations.all {
+      kotlinOptions {
+        if (name.endsWith("Test", ignoreCase = true)) {
+          freeCompilerArgs = freeCompilerArgs.filterNot { it.startsWith("-Xexplicit-api=") }
+        } else {
+          freeCompilerArgs = freeCompilerArgs + "-Xexplicit-api=strict"
+        }
+      }
+    }
   }
 
   // Configure native targets
@@ -114,6 +145,16 @@ tasks.withType<Test> {
   }
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+  kotlinOptions {
+    if (name.contains("Test", ignoreCase = true)) {
+      freeCompilerArgs = freeCompilerArgs - "-Xexplicit-api=strict"
+    } else {
+      freeCompilerArgs = freeCompilerArgs + "-Xexplicit-api=strict"
+    }
+  }
+}
+
 tasks.withType<JavaCompile>().configureEach {
   sourceCompatibility = "1.8"
   targetCompatibility = "1.8"
@@ -127,11 +168,39 @@ val javadocJar by tasks.registering(Jar::class) {
   from(dokkaHtml.outputDirectory)
 }
 
+tasks.withType<AbstractPublishToMaven>().configureEach {
+  dependsOn(tasks.withType<Sign>())
+}
+
+val allSourcesJar by tasks.registering(Jar::class) {
+  archiveClassifier.set("sources")
+  from(kotlin.sourceSets.flatMap { it.kotlin.srcDirs })
+}
+
 // Configure publications for Maven Central
 publishing {
   publications.withType<MavenPublication> {
     artifact(tasks.named("javadocJar"))
-    artifact(tasks.named("sourcesJar"))
+
+    // Add source JARs for each target
+    when (name) {
+      "kotlinMultiplatform" -> artifact(tasks.named("metadataSourcesJar"))
+      "jvm" -> artifact(tasks.named("jvmSourcesJar"))
+      "js" -> artifact(tasks.named("jsSourcesJar"))
+      "iosArm64" -> artifact(tasks.named("iosArm64SourcesJar"))
+      "iosX64" -> artifact(tasks.named("iosX64SourcesJar"))
+      "iosSimulatorArm64" -> artifact(tasks.named("iosSimulatorArm64SourcesJar"))
+      "linuxX64" -> artifact(tasks.named("linuxX64SourcesJar"))
+      "linuxArm64" -> artifact(tasks.named("linuxArm64SourcesJar"))
+      "macosX64" -> artifact(tasks.named("macosX64SourcesJar"))
+      "macosArm64" -> artifact(tasks.named("macosArm64SourcesJar"))
+      "mingwX64" -> artifact(tasks.named("mingwX64SourcesJar"))
+      "tvosArm64" -> artifact(tasks.named("tvosArm64SourcesJar"))
+      "tvosSimulatorArm64" -> artifact(tasks.named("tvosSimulatorArm64SourcesJar"))
+      "watchosArm32" -> artifact(tasks.named("watchosArm32SourcesJar"))
+      "watchosArm64" -> artifact(tasks.named("watchosArm64SourcesJar"))
+      "watchosSimulatorArm64" -> artifact(tasks.named("watchosSimulatorArm64SourcesJar"))
+    }
 
     groupId = "dev.genos"
     artifactId = "kotlinx.serialization.llm.xml"
@@ -215,5 +284,13 @@ spotless {
   kotlinGradle {
     target("*.gradle.kts")
     ktlint("0.48.2")
+  }
+}
+
+tasks.register("printTasks") {
+  doLast {
+    project.tasks.forEach { task ->
+      println(task.name)
+    }
   }
 }
