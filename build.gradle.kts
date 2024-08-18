@@ -124,9 +124,30 @@ kotlin {
   }
 
   // Configure native targets
-  targets.withType<KotlinNativeTarget>().configureEach {
+  targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().configureEach {
     binaries.all {
       freeCompilerArgs += listOf("-Xallocator=mimalloc")
+      binaryOption("bundleKlibPart", "true")
+    }
+
+    val targetName = name
+
+    // Create JAR task for each native target with the correct naming
+    tasks.register<Jar>("${targetName}Jar") {
+      from(compilations["main"].output.allOutputs)
+      // Remove the classifier to match the expected naming convention
+      archiveClassifier.set("")
+      // Set the correct name for the JAR
+      archiveBaseName.set("kotlinx-serialization-llm-xml-$targetName")
+    }
+
+    // Configure Maven publication for native targets
+    mavenPublication {
+      artifactId = "kotlinx-serialization-llm-xml-$targetName"
+      artifact(tasks["${targetName}Jar"])
+      pom {
+        packaging = "jar"
+      }
     }
   }
 }
@@ -163,6 +184,53 @@ val javadocJar by tasks.registering(Jar::class) {
   dependsOn(dokkaHtml)
   archiveClassifier.set("javadoc")
   from(dokkaHtml.outputDirectory)
+}
+
+tasks.withType<AbstractPublishToMaven>().configureEach {
+  dependsOn(tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile>())
+  dependsOn(tasks.withType<Jar>())
+}
+
+tasks.named<Jar>("jsJar") {
+  dependsOn(kotlin.js().compilations["main"].compileKotlinTask)
+
+  // Remove the classifier to match the expected naming convention
+  archiveClassifier.set("")
+  // Set the correct name for the JAR
+  archiveBaseName.set("kotlinx-serialization-llm-xml-js")
+  // Ensure the extension is .jar
+  archiveExtension.set("jar")
+
+  // Include the KLIB file
+  from(kotlin.js().compilations["main"].output.allOutputs) {
+    include("*.klib")
+  }
+
+  // Include JavaScript files
+  from(kotlin.js().compilations["main"].compileKotlinTask.destinationDirectory) {
+    include("*.js")
+  }
+
+  // Explicitly set the output directory
+  destinationDirectory.set(layout.buildDirectory.dir("libs"))
+
+  // Add some logging
+  doFirst {
+    println("jsJar task is starting")
+    println("Output directory: ${destinationDirectory.get()}")
+    println("Archive file name: ${archiveFileName.get()}")
+  }
+
+  doLast {
+    println("jsJar task has finished")
+    println("JAR file should be at: ${archiveFile.get().asFile.absolutePath}")
+    if (archiveFile.get().asFile.exists()) {
+      println("JAR file exists")
+      println("JAR file size: ${archiveFile.get().asFile.length()} bytes")
+    } else {
+      println("JAR file does not exist")
+    }
+  }
 }
 
 // Configure publications for Maven Central
@@ -256,8 +324,8 @@ jreleaser {
   project {
     copyright.set("2024 GenOS")
     name.set("kotlinx-serialization-llm-xml")
-    //version.set(project.version.toString())
-    //website.set("https://github.com/Gen-OS/kotlinx-serialization-llm-xml")
+    // version.set(project.version.toString())
+    // website.set("https://github.com/Gen-OS/kotlinx-serialization-llm-xml")
     description.set("Kotlin Serialization extension for XML-based interactions with Large Language Models")
     authors.set(listOf("Robb Walters"))
     license.set("Apache-2.0")
