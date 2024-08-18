@@ -59,11 +59,6 @@ kotlin {
   iosX64()
   iosArm64()
   iosSimulatorArm64()
-  watchosArm32()
-  watchosArm64()
-  watchosSimulatorArm64()
-  tvosArm64()
-  tvosSimulatorArm64()
   mingwX64()
 
   targets.all {
@@ -168,42 +163,32 @@ val javadocJar by tasks.registering(Jar::class) {
   from(dokkaHtml.outputDirectory)
 }
 
-tasks.withType<AbstractPublishToMaven>().configureEach {
-  dependsOn(tasks.withType<Sign>())
-}
-
-val allSourcesJar by tasks.registering(Jar::class) {
-  archiveClassifier.set("sources")
-  from(kotlin.sourceSets.flatMap { it.kotlin.srcDirs })
-}
-
 // Configure publications for Maven Central
 publishing {
   publications.withType<MavenPublication> {
-    artifact(tasks.named("javadocJar"))
+    val targetName = name.replace("Kotlin", "")
 
-    // Add source JARs for each target
-    when (name) {
-      "kotlinMultiplatform" -> artifact(tasks.named("metadataSourcesJar"))
-      "jvm" -> artifact(tasks.named("jvmSourcesJar"))
-      "js" -> artifact(tasks.named("jsSourcesJar"))
-      "iosArm64" -> artifact(tasks.named("iosArm64SourcesJar"))
-      "iosX64" -> artifact(tasks.named("iosX64SourcesJar"))
-      "iosSimulatorArm64" -> artifact(tasks.named("iosSimulatorArm64SourcesJar"))
-      "linuxX64" -> artifact(tasks.named("linuxX64SourcesJar"))
-      "linuxArm64" -> artifact(tasks.named("linuxArm64SourcesJar"))
-      "macosX64" -> artifact(tasks.named("macosX64SourcesJar"))
-      "macosArm64" -> artifact(tasks.named("macosArm64SourcesJar"))
-      "mingwX64" -> artifact(tasks.named("mingwX64SourcesJar"))
-      "tvosArm64" -> artifact(tasks.named("tvosArm64SourcesJar"))
-      "tvosSimulatorArm64" -> artifact(tasks.named("tvosSimulatorArm64SourcesJar"))
-      "watchosArm32" -> artifact(tasks.named("watchosArm32SourcesJar"))
-      "watchosArm64" -> artifact(tasks.named("watchosArm64SourcesJar"))
-      "watchosSimulatorArm64" -> artifact(tasks.named("watchosSimulatorArm64SourcesJar"))
+    // Set a unique artifactId for each publication
+    artifactId = when (name) {
+      "kotlinMultiplatform" -> "kotlinx-serialization-llm-xml"
+      else -> "kotlinx-serialization-llm-xml-$targetName"
+    }
+
+    println("Configuring publication for $name")
+    println("Artifact ID: $artifactId")
+
+    // Add javadoc JAR
+    val javadocTask = tasks.findByName("javadocJar")
+    if (javadocTask != null) {
+      artifact(javadocTask) {
+        classifier = "javadoc"
+      }
+      println("Added javadoc JAR to $name")
+    } else {
+      println("WARNING: javadocJar task not found for $name")
     }
 
     groupId = "dev.genos"
-    artifactId = "kotlinx.serialization.llm.xml"
 
     pom {
       name.set("kotlinx-serialization-llm-xml")
@@ -243,6 +228,8 @@ publishing {
       url = uri(layout.buildDirectory.dir("staging-deploy"))
     }
   }
+
+  println("Finished configuring publication: $name")
 }
 
 // JReleaser configuration
