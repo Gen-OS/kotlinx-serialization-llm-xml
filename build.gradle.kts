@@ -1,4 +1,6 @@
 import org.gradle.plugins.signing.Sign
+import org.gradle.plugins.signing.signatory.pgp.PgpSignatoryFactory
+import java.io.ByteArrayInputStream
 
 buildscript {
   repositories {
@@ -23,6 +25,7 @@ plugins {
 }
 
 apply(plugin = "org.jetbrains.dokka")
+apply(plugin = "signing")
 
 group = "dev.genos"
 version = "0.1.1"
@@ -178,17 +181,26 @@ tasks.withType<JavaCompile>().configureEach {
   targetCompatibility = "1.8"
 }
 
+afterEvaluate {
+  tasks.withType<AbstractPublishToMaven>().configureEach {
+    // Find the corresponding signing task
+    val signingTask = tasks.withType<Sign>().find { it.name == "sign${name.capitalize()}Publication" }
+
+    // Set up task dependencies
+    dependsOn(tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile>())
+    dependsOn(tasks.withType<Jar>())
+
+    // Ensure correct task ordering
+    signingTask?.let { mustRunAfter(it) }
+  }
+}
+
 val dokkaHtml by tasks.getting(org.jetbrains.dokka.gradle.DokkaTask::class)
 
 val javadocJar by tasks.registering(Jar::class) {
   dependsOn(dokkaHtml)
   archiveClassifier.set("javadoc")
   from(dokkaHtml.outputDirectory)
-}
-
-tasks.withType<AbstractPublishToMaven>().configureEach {
-  dependsOn(tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile>())
-  dependsOn(tasks.withType<Jar>())
 }
 
 tasks.named<Jar>("jsJar") {
@@ -223,10 +235,8 @@ tasks.named<Jar>("jsJar") {
 
   doLast {
     println("jsJar task has finished")
-    println("JAR file should be at: ${archiveFile.get().asFile.absolutePath}")
     if (archiveFile.get().asFile.exists()) {
       println("JAR file exists")
-      println("JAR file size: ${archiveFile.get().asFile.length()} bytes")
     } else {
       println("JAR file does not exist")
     }
@@ -244,8 +254,21 @@ publishing {
       else -> "kotlinx-serialization-llm-xml-$targetName"
     }
 
-    println("Configuring publication for $name")
+    println("\nConfiguring publication for $name")
     println("Artifact ID: $artifactId")
+
+    // Add main artifact (JAR)
+    val jarTaskName = when {
+      name == "kotlinMultiplatform" -> "allMetadataJar"
+      else -> "${targetName.decapitalize()}Jar"
+    }
+    val jarTask = tasks.findByName(jarTaskName) as? Jar
+    if (jarTask != null) {
+      artifact(jarTask)
+      println("Added ${jarTask.name} to $name")
+    } else {
+      println("WARNING: Main JAR task not found for publication $name")
+    }
 
     // Add javadoc JAR
     val javadocTask = tasks.findByName("javadocJar")
@@ -253,7 +276,7 @@ publishing {
       artifact(javadocTask) {
         classifier = "javadoc"
       }
-      println("Added javadoc JAR to $name")
+      println("Added javadocJar to $name")
     } else {
       println("WARNING: javadocJar task not found for $name")
     }
@@ -301,7 +324,7 @@ publishing {
     }
   }
 
-  println("Finished configuring publication: $name")
+  println("\nFinished configuring publications for $name")
 }
 
 // JReleaser configuration
@@ -352,17 +375,67 @@ spotless {
   }
 }
 
-tasks.withType<Sign>().configureEach {
-  val signingKeyId: String? = project.findProperty("signing.keyId") as String?
-  val signingKey: String? = project.findProperty("signing.secretKey") as String?
-  val signingPassword: String? = project.findProperty("signing.password") as String?
-  signing.useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
-
-  doFirst {
-    println("Configuring signing for task: ${this.name}")
-    println("Signing Key ID available: ${signingKeyId != null}")
-    println("Signing Key available: ${signingKey != null}")
-    println("Signing Password available: ${signingPassword != null}")
+tasks.withType<Jar>().configureEach {
+  doLast {
+    val outputFile = archiveFile.get().asFile
+    if (outputFile.exists()) {
+      println("JAR file created: ${outputFile.absolutePath}")
+      println("JAR file size: ${outputFile.length()} bytes")
+    } else {
+      println("Warning: JAR file not created: ${outputFile.absolutePath}")
+    }
   }
 }
 
+val signingKeyId: String? = project.findProperty("signing.keyId") as String?
+val signingKey: String? = project.findProperty("signing.secretKey") as String?
+val signingPassword: String? = project.findProperty("signing.password") as String?
+
+signing {
+  useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
+  sign(publishing.publications)
+}
+
+tasks.withType<Sign>().configureEach {
+  val publicationName = name
+    .substringAfter("sign")
+    .substringBefore("Publication")
+    .decapitalize()
+
+  println("Configuring $name for publication: $publicationName")
+
+  val jarTask = tasks.findByName("${publicationName}Jar") as? Jar
+  if (jarTask != null) {
+    dependsOn(jarTask)
+    inputs.files(jarTask.archiveFile)
+  }
+
+  val publication = publishing.publications.findByName(publicationName) as? MavenPublication
+
+  doFirst {
+    println("Executing signing task: ${this.name}")
+    println("Signing key ID available: ${!signingKeyId.isNullOrEmpty()}")
+    println("Signing key available: ${signingKey.isNullOrEmpty()}")
+    println("Signing password available: ${!signingPassword.isNullOrEmpty()}")
+
+    println("Input files for $name:")
+    inputs.files.forEach { file ->
+      println("  path: ${file.absolutePath}")
+      println("  exists: ${file.exists()}")
+      println("  size: ${file.length()} bytes")
+    }
+
+    if (publication == null) {
+      println("ERROR: Publication not found for $publicationName")
+    }
+
+    if (signatory == null) {
+      println("ERROR: signatory not found for $publicationName")
+    }
+
+    /* I'm not sure why the signatory is always null... when I come back to this
+       my plan is to try to go back to specifying keys from files and rings rather
+       than use in memory signing.
+     */
+  }
+}
