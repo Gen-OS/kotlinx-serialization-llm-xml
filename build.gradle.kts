@@ -439,3 +439,30 @@ tasks.withType<Sign>().configureEach {
      */
   }
 }
+
+
+tasks.register("testSign") {
+  doLast {
+    val dummyFile = file("${buildDir}/dummy.txt")
+    dummyFile.writeText("This is a test file for signing")
+
+    println("Signing configuration:")
+    println("Signing key ID: ${project.findProperty("signing.keyId")}")
+    println("Signing key available: ${project.findProperty("signing.secretKey").toString().isNotEmpty()}")
+    println("Signing password available: ${project.findProperty("signing.password").toString().isNotEmpty()}")
+
+    try {
+      signing.sign(dummyFile)
+      println("Signing task executed successfully")
+    } catch (e: Exception) {
+      println("Signing task failed: ${e.message}")
+      e.printStackTrace()
+    }
+
+    if (file("${buildDir}/dummy.txt.asc").exists()) {
+      println("Test signing successful: ${buildDir}/dummy.txt.asc created")
+    } else {
+      println("Test signing failed: ${buildDir}/dummy.txt.asc not created")
+    }
+  }
+}
