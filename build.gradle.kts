@@ -113,6 +113,24 @@ tasks.withType<JavaCompile>().configureEach {
 
 // Configure publishing
 publishing {
+  repositories {
+    maven {
+      url = uri("https://genos.jfrog.io/artifactory/genos-gradle-dev-local")
+      credentials {
+        username = System.getenv("GENOS_REPO_USER")
+        password = System.getenv("GENOS_REPO_TOKEN")
+      }
+    }
+    maven {
+      name = "GitHubPackages"
+      url = uri("https://maven.pkg.github.com/gen-os/littledb")
+      credentials {
+        username = System.getenv("GITHUB_ACTOR")
+        password = System.getenv("GITHUB_TOKEN")
+      }
+    }
+  }
+
   publications {
     create<MavenPublication>("maven") {
       from(components["kotlin"])
@@ -120,6 +138,10 @@ publishing {
       groupId = project.group.toString()
       artifactId = project.name
       version = project.version.toString()
+    }
+
+    all {
+      withBuildIdentifier()
     }
   }
 }

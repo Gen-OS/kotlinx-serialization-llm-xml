@@ -1,0 +1,50 @@
+name: CI
+
+"on":
+  push:
+    branches:
+      - master
+
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+
+env:
+  GENOS_REPO_USER: ${{ secrets.GENOS_REPO_USER }}
+  GENOS_REPO_TOKEN: ${{ secrets.GENOS_REPO_TOKEN }}
+
+jobs:
+  build:
+    name: "Build"
+    runs-on: linux-x64-large
+    permissions:
+      contents: "read"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: "Setup: Harden Runner"
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+        with:
+          disable-sudo: true
+          egress-policy: audit
+          allowed-endpoints: >
+            api.github.com:443
+            github.com:443
+      - name: "Setup: Checkout"
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          persist-credentials: false
+          submodules: true
+          fetch-depth: 0
+      - name: "Setup: Java"
+        uses: actions/setup-java@2dfa2011c5b2a0f1489bf9e433881c92c1631f88 # v4.3.0
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+      - name: "Setup: Gradle"
+        uses: gradle/actions/setup-gradle@d156388eb19639ec20ade50009f3d199ce1e2808 # v4.1.0
+      - name: "Build: JVM"
+        run: ./gradlew build -Pci=true
