@@ -78,7 +78,7 @@ kotlin {
         implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.5")
         implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
         implementation("org.slf4j:slf4j-api:2.0.5")
-        implementation("ch.qos.logback:logback-classic:1.4.7")
+        implementation("ch.qos.logback:logback-classic:1.5.8")
       }
     }
   }
