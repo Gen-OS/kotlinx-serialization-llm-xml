@@ -75,7 +75,7 @@ kotlin {
     val jvmMain by getting {
       dependencies {
         implementation("com.squareup.okhttp3:okhttp:4.12.0")
-        implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.5")
+        implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.6")
         implementation("io.github.cdimascio:dotenv-kotlin:6.4.2")
         implementation("org.slf4j:slf4j-api:2.0.5")
         implementation("ch.qos.logback:logback-classic:1.5.8")
