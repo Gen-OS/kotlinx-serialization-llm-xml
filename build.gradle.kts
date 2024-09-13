@@ -123,7 +123,7 @@ publishing {
     }
     maven {
       name = "GitHubPackages"
-      url = uri("https://maven.pkg.github.com/gen-os/littledb")
+      url = uri("https://maven.pkg.github.com/gen-os/kotlinx-serialization-llm-xml")
       credentials {
         username = System.getenv("GITHUB_ACTOR")
         password = System.getenv("GITHUB_TOKEN")
