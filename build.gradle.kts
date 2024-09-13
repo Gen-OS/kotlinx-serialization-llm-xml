@@ -1,9 +1,10 @@
+@file:OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.kotlin.serialization)
-  application
   `maven-publish`
 }
 
@@ -34,6 +35,11 @@ kotlin {
   js(IR) {
     browser()
     nodejs()
+  }
+
+  wasmJs {
+   browser()
+   nodejs()
   }
 
   // Native targets
@@ -89,9 +95,9 @@ kotlin {
   }
 }
 
-application {
-  mainClass.set("dev.genos.kotlinx.serialization.llm.xml.demo.ClaudeDemoKt")
-}
+// application {
+//   mainClass.set("dev.genos.kotlinx.serialization.llm.xml.demo.ClaudeDemoKt")
+// }
 
 tasks.withType<Test> {
   testLogging {
