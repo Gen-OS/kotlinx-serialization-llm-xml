@@ -19,7 +19,7 @@ env:
 jobs:
   build:
     name: "Build"
-    runs-on: linux-x64-large
+    runs-on: ubuntu-latest
     permissions:
       contents: "read"
     defaults:
